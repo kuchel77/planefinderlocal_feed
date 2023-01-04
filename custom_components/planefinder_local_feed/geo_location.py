@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 import voluptuous as vol
 
-from aio_geojson_planefinder_local import PlaneFinderLocalFeedManager
+from aio_geojson_planefinderlocal import PlanefinderLocalFeedManager
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
@@ -43,10 +43,10 @@ DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-SIGNAL_DELETE_ENTITY = "flightairmap_feed_delete_{}"
-SIGNAL_UPDATE_ENTITY = "flightairmap_feed_update_{}"
+SIGNAL_DELETE_ENTITY = "planefinderlocal_feed_delete_{}"
+SIGNAL_UPDATE_ENTITY = "planefinderlocal_feed_update_{}"
 
-SOURCE = "flightairmap_feed"
+SOURCE = "planefinderlocal_feed"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
-    """Set up the Flight Air Map Feed platform."""
+    """Set up the planefinderlocal Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (
         config.get(CONF_LATITUDE, hass.config.latitude),
@@ -70,7 +70,7 @@ async def async_setup_platform(
     radius_in_km = config[CONF_RADIUS]
     url = config[CONF_URL]
     # Initialize the entity manager.
-    manager = FlightAirMapFeedEntityManager(
+    manager = PlanefinderLocalFeedEntityManager(
         hass, async_add_entities, scan_interval, coordinates, url, radius_in_km
     )
 
@@ -87,8 +87,8 @@ async def async_setup_platform(
     hass.async_create_task(manager.async_update())
 
 
-class FlightAirMapFeedEntityManager:
-    """Feed Entity Manager for Flight Air Map GeoJSON feed."""
+class PlanefinderLocalFeedEntityManager:
+    """Feed Entity Manager for PlanefinderLocal GeoJSON feed."""
 
     def __init__(
         self, hass, async_add_entities, scan_interval, coordinates, url, radius_in_km,
@@ -96,7 +96,7 @@ class FlightAirMapFeedEntityManager:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         websession = aiohttp_client.async_get_clientsession(hass)
-        self._feed_manager = FlightAirMapFeedManager(
+        self._feed_manager = PlanefinderLocalFeedManager(
             websession,
             self._generate_entity,
             self._update_entity,
@@ -153,7 +153,7 @@ class FlightAirMapFeedEntityManager:
         async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class FlightAirMapLocationEvent(GeolocationEvent):
+class PlanefinderLocalLocationEvent(GeolocationEvent):
     """This represents an external event with Flight Air Map data."""
 
     def __init__(self, feed_manager, external_id):

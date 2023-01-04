@@ -5,5 +5,5 @@
   "requirements": ["aio_geojson_planefinderlocal>=0.1"],
   "dependencies": [],
   "codeowners": ["@kuchel77"],
-  "version": "0.1"
+  "version": "0.1.1"
 }
