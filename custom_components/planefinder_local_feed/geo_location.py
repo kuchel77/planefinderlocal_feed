@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 import voluptuous as vol
 
-from .feed_manager import PlanefinderLocalFeedManager
+from aio_geojson_planefinder_local.feed_manager import PlanefinderLocalFeedManager
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
