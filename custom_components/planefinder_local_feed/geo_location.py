@@ -265,7 +265,7 @@ class PlanefinderLocalLocationEvent(GeolocationEvent):
         self._wind_speed = feed_entry.wind_speed
         self._wind_direction = feed_entry.wind_direction
         self._route = feed_entry.route
-        _LOGGER.error(self._aircraft_hex)
+        _LOGGER.debug(self._aircraft_hex)
 
     @property
     def icon(self):
