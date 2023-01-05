@@ -239,11 +239,7 @@ class PlanefinderLocalLocationEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry):
         """Update the internal state from the provided feed entry."""
-        if feed_entry.call_sign is None:
-            self._name = feed_entry.aircraft_registration
-        else:
-            self._name = feed_entry.call_sign
-
+        self._name = feed_entry.call_sign
         self._call_sign = feed_entry.call_sign
         self._distance = feed_entry.distance_to_home
         self._latitude = feed_entry.coordinates[0]
