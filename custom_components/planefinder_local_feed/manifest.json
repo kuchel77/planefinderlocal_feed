@@ -2,8 +2,8 @@
   "domain": "planefinder_local_feed",
   "name": "Planefinder Local Feed",
   "documentation": "https://www.github.com/kuchel77/planefinder_local_feed",
-  "requirements": ["aio_geojson_planefinderlocal>=0.1"],
+  "requirements": ["aio_geojson_planefinderlocal>=0.2"],
   "dependencies": [],
   "codeowners": ["@kuchel77"],
-  "version": "0.1.1"
+  "version": "0.2"
 }

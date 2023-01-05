@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 import voluptuous as vol
 
-from aio_geojson_planefinderlocal import PlanefinderLocalFeedManager
+from .feed_manager import PlanefinderLocalFeedManager
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
@@ -37,6 +37,15 @@ ATTR_DEPARTURE_AIRPORT = "departure_airport"
 ATTR_HEADING = "heading"
 ATTR_SQUAWK = "squawk"
 ATTR_ALTITUDE = "altitude"
+ATTR_SELECTED_ALTITUDE = "selected_altitude"
+ATTR_AIRCRAFT_HEX = "aircraft_hex"
+ATTR_SPEED = "speed"
+ATTR_GROUND_SPEED = "ground_speed"
+ATTR_TRUE_AIR_SPEED = "true_air_speed"
+ATTR_INDICATED_AIR_SPEED = "indicated_air_speed"
+ATTR_WIND_SPEED = "wind_speed"
+ATTR_WIND_DIRECTION = "wind_direction"
+ATTR_ROUTE = "route"
 
 DEFAULT_RADIUS_IN_KM = 2000.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
@@ -91,7 +100,13 @@ class PlanefinderLocalFeedEntityManager:
     """Feed Entity Manager for PlanefinderLocal GeoJSON feed."""
 
     def __init__(
-        self, hass, async_add_entities, scan_interval, coordinates, url, radius_in_km,
+        self,
+        hass,
+        async_add_entities,
+        scan_interval,
+        coordinates,
+        url,
+        radius_in_km,
     ):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
@@ -140,7 +155,7 @@ class PlanefinderLocalFeedEntityManager:
 
     async def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = FlightAirMapLocationEvent(self, external_id)
+        new_entity = PlanefinderLocalLocationEvent(self, external_id)
         # Add new entities to HA.
         self._async_add_entities([new_entity], True)
 
@@ -160,23 +175,27 @@ class PlanefinderLocalLocationEvent(GeolocationEvent):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
-        self._flight_code = None
+        self._call_sign = None
         self._distance = None
         self._latitude = None
         self._longitude = None
-        self._publication_date = None
-        self._location = None
         self._aircraft_registration = None
-        self._aircraft_icao = None
-        self._aircraft_type = None
         self._altitude = None
-        self._departure_airport = None
-        self._arrival_airport = None
-        self._heading = None
+        self._selected_altitude = None
         self._squawk = None
-        self._remove_signal_delete = None
-        self._remove_signal_update = None
-        self._name = None
+        self._heading = None
+        self._aircraft_type = None
+        self._arrival_airport = None
+        self._departure_airport = None
+        self._flight_code = None
+        self._aircraft_hex = None
+        self._speed = None
+        self._ground_speed = None
+        self._true_air_speed = None
+        self._indicated_air_speed = None
+        self._wind_speed = None
+        self._wind_direction = None
+        self._route = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -220,18 +239,33 @@ class PlanefinderLocalLocationEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry):
         """Update the internal state from the provided feed entry."""
-        self._name = feed_entry.title
+        if feed_entry.call_sign is None:
+            self._name = feed_entry.aircraft_registration
+        else:
+            self._name = feed_entry.call_sign
+
+        self._call_sign = feed_entry.call_sign
         self._distance = feed_entry.distance_to_home
         self._latitude = feed_entry.coordinates[0]
         self._longitude = feed_entry.coordinates[1]
         self._aircraft_registration = feed_entry.aircraft_registration
         self._altitude = feed_entry.altitude
+        self._selected_altitude = feed_entry.selected_altitude
         self._squawk = feed_entry.squawk
         self._heading = feed_entry.heading
         self._aircraft_type = feed_entry.aircraft_type
         self._arrival_airport = feed_entry.arrival_airport
         self._departure_airport = feed_entry.departure_airport
-        self._flight_code = feed_entry.title
+        self._flight_code = feed_entry.flight_num
+        self._aircraft_hex = feed_entry.aircraft_hex
+        self._speed = feed_entry.speed
+        self._ground_speed = feed_entry.ground_speed
+        self._true_air_speed = feed_entry.true_air_speed
+        self._indicated_air_speed = feed_entry.indicated_air_speed
+        self._wind_speed = feed_entry.wind_speed
+        self._wind_direction = feed_entry.wind_direction
+        self._route = feed_entry.route
+        _LOGGER.error(self._aircraft_hex)
 
     @property
     def icon(self):
@@ -281,7 +315,21 @@ class PlanefinderLocalLocationEvent(GeolocationEvent):
             (ATTR_HEADING, self._heading),
             (ATTR_SQUAWK, self._squawk),
             (ATTR_ALTITUDE, self._altitude),
+            (ATTR_SELECTED_ALTITUDE, self._selected_altitude),
+            (ATTR_AIRCRAFT_HEX, self._aircraft_hex),
+            (ATTR_SPEED, self._speed),
+            (ATTR_GROUND_SPEED, self._ground_speed),
+            (ATTR_TRUE_AIR_SPEED, self._true_air_speed),
+            (ATTR_INDICATED_AIR_SPEED, self._indicated_air_speed),
+            (ATTR_WIND_SPEED, self._wind_speed),
+            (ATTR_WIND_DIRECTION, self._wind_direction),
+            (ATTR_ROUTE, self._route),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value
         return attributes
+
+    @property
+    def unique_id(self):
+        """Return the unique_id"""
+        unique_id = "planefinderlocal_" + self._aircraft_hex
